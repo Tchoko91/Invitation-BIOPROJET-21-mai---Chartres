@@ -1,0 +1,47 @@
+BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//Bioprojet//Invitation Medicale//FR
+CALSCALE:GREGORIAN
+METHOD:PUBLISH
+X-WR-CALNAME:Somnolence et Risque Accidentel
+X-WR-TIMEZONE:Europe/Paris
+BEGIN:VTIMEZONE
+TZID:Europe/Paris
+BEGIN:DAYLIGHT
+TZOFFSETFROM:+0100
+TZOFFSETTO:+0200
+TZNAME:CEST
+DTSTART:19700329T020000
+RRULE:FREQ=YEARLY;BYDAY=-1SU;BYMONTH=3
+END:DAYLIGHT
+BEGIN:STANDARD
+TZOFFSETFROM:+0200
+TZOFFSETTO:+0100
+TZNAME:CET
+DTSTART:19701025T030000
+RRULE:FREQ=YEARLY;BYDAY=-1SU;BYMONTH=10
+END:STANDARD
+END:VTIMEZONE
+BEGIN:VEVENT
+DTSTART;TZID=Europe/Paris:20260521T193000
+DTEND;TZID=Europe/Paris:20260521T220000
+DTSTAMP:20260327T120000Z
+UID:bioprojet-somnolence-21mai2026@bioprojet.com
+SUMMARY:Somnolence et Risque Accidentel\, Les Responsabilités - Bioprojet
+DESCRIPTION:PROGRAMME\n\n19h30 - 20h00 : Accueil des participants\n20h00 - 20h30 : Cas clinique (Dr SAVATIER) - Dépistage de la somnolence et outils disponibles\n20h30 - 21h00 : Cas clinique avec risque accidentel - Aspect médico-légal (Dr BAROIN)\n21h00 - 21h30 : Session questions/réponses\n21h30 - 22h00 : Buffet dînatoire\n\nIntervenants : Dr Rim SAVATIER & Dr Jean-Pierre BAROIN\n\nContact : Karl TCHOKOMENY - k.tchokomeny@bioprojet.com - 06 82 42 14 46
+LOCATION:Novotel Chartres\, 5 ter avenue Marcel Proust\, 28000 CHARTRES
+ORGANIZER;CN=Bioprojet:mailto:k.tchokomeny@bioprojet.com
+STATUS:CONFIRMED
+CATEGORIES:Conférence Médicale
+BEGIN:VALARM
+TRIGGER:-P11D
+ACTION:DISPLAY
+DESCRIPTION:Rappel : Conférence "Somnolence et Risque Accidentel" dans ~1,5 semaine au Novotel Chartres
+END:VALARM
+BEGIN:VALARM
+TRIGGER:-P2D
+ACTION:DISPLAY
+DESCRIPTION:Rappel : Conférence "Somnolence et Risque Accidentel" dans 2 jours au Novotel Chartres le 21 mai à 19h30
+END:VALARM
+END:VEVENT
+END:VCALENDAR

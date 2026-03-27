@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Confirmation — Conférence Bioprojet</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { font-family:'Segoe UI',Roboto,Helvetica,Arial,sans-serif; background:#f4f6f9; min-height:100vh; display:flex; flex-direction:column; }
+  .header { background:linear-gradient(135deg,#1a3a5c,#2d6a9f,#1a3a5c); color:#fff; text-align:center; padding:40px 20px; }
+  .header h1 { font-size:26px; margin-bottom:8px; }
+  .header .sub { color:#c5dff0; font-size:14px; }
+  .header .bar { width:60px; height:3px; background:#e8833a; margin:12px auto; border-radius:2px; }
+  .container { max-width:600px; margin:-30px auto 40px; padding:0 20px; flex:1; width:100%; }
+  .card { background:#fff; border-radius:12px; box-shadow:0 4px 20px rgba(0,0,0,.08); overflow:hidden; }
+  .card-body { padding:35px 30px; text-align:center; }
+  .response-icon { font-size:60px; margin-bottom:15px; }
+  .response-title { font-size:22px; color:#1a3a5c; font-weight:700; margin-bottom:10px; }
+  .response-msg { color:#555; font-size:15px; line-height:1.6; margin-bottom:25px; }
+  .ics-box { background:#f0f5fa; border-radius:10px; padding:25px; margin:20px 0; border-left:4px solid #2d6a9f; }
+  .ics-box h3 { color:#1a3a5c; font-size:16px; margin-bottom:10px; }
+  .ics-box p { color:#888; font-size:13px; line-height:1.5; margin-bottom:15px; }
+  .btn-ics { display:inline-block; background:#2d6a9f; color:#fff; padding:13px 30px; border-radius:25px; text-decoration:none; font-weight:600; font-size:14px; transition:all .2s; }
+  .btn-ics:hover { background:#1a3a5c; transform:translateY(-1px); box-shadow:0 4px 12px rgba(26,58,92,.3); }
+  .piqure-msg { color:#e8833a; font-size:14px; font-style:italic; margin-top:15px; }
+  .event-recap { text-align:left; margin:25px 0; }
+  .event-recap dt { color:#2d6a9f; font-weight:600; font-size:13px; margin-top:10px; }
+  .event-recap dd { color:#333; font-size:14px; margin-left:0; }
+  .admin-section { background:#fff; border-radius:12px; box-shadow:0 4px 20px rgba(0,0,0,.08); margin-top:25px; overflow:hidden; }
+  .admin-header { background:#1a3a5c; color:#fff; padding:15px 25px; font-size:16px; font-weight:600; cursor:pointer; display:flex; justify-content:space-between; align-items:center; }
+  .admin-header:hover { background:#15304d; }
+  .admin-body { padding:25px; display:none; }
+  .admin-body.show { display:block; }
+  .stats { display:grid; grid-template-columns:repeat(2,1fr); gap:12px; margin-bottom:20px; }
+  .stat-card { background:#f8f9fb; border-radius:8px; padding:15px; text-align:center; }
+  .stat-card .num { font-size:28px; font-weight:700; }
+  .stat-card .label { font-size:12px; color:#888; margin-top:4px; }
+  .stat-green .num { color:#27ae60; }
+  .stat-orange .num { color:#e67e22; }
+  .stat-yellow .num { color:#d4a20a; }
+  .stat-gray .num { color:#95a5a6; }
+  table.responses { width:100%; border-collapse:collapse; font-size:13px; }
+  table.responses th { background:#f0f5fa; color:#1a3a5c; padding:10px; text-align:left; }
+  table.responses td { padding:10px; border-bottom:1px solid #eee; }
+  .badge { display:inline-block; padding:3px 10px; border-radius:12px; font-size:11px; font-weight:600; color:#fff; }
+  .badge-participe { background:#27ae60; }
+  .badge-peut-etre { background:#e67e22; }
+  .badge-indisponible { background:#f1c40f; color:#333; }
+  .badge-pas-interesse { background:#95a5a6; }
+  .btn-export { background:#e8833a; color:#fff; border:none; padding:10px 20px; border-radius:6px; cursor:pointer; font-size:13px; font-weight:600; margin-top:10px; }
+  .btn-export:hover { background:#d4742f; }
+  .footer { text-align:center; padding:20px; color:#aaa; font-size:11px; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div style="font-size:12px;letter-spacing:2px;color:#8bbde0;text-transform:uppercase;margin-bottom:6px;">Conférence Médicale</div>
+  <h1>Somnolence et Risque Accidentel</h1>
+  <div class="bar"></div>
+  <div class="sub">Jeudi 21 mai 2026 — 19h30 — Novotel Chartres</div>
+</div>
+
+<div class="container">
+
+  <!-- Confirmation Card (dynamic) -->
+  <div class="card" id="confirmCard">
+    <div class="card-body" id="cardBody">
+      <div class="response-icon" id="respIcon">⏳</div>
+      <div class="response-title" id="respTitle">Enregistrement de votre réponse...</div>
+      <div class="response-msg" id="respMsg">Merci de patienter un instant.</div>
+    </div>
+  </div>
+
+  <!-- ICS Download Box (shown after response) -->
+  <div class="card" id="icsCard" style="display:none;margin-top:20px;">
+    <div class="card-body">
+      <div class="ics-box">
+        <h3>💉 Piqûre de rappel calendrier</h3>
+        <p>Pour ne pas oublier, ajoutez cet événement à votre calendrier. Des rappels sont déjà configurés à J-11 et J-2.</p>
+        <a href="evenement_bioprojet.ics" download class="btn-ics">📥 Télécharger le fichier calendrier (.ics)</a>
+        <div class="piqure-msg">
+          Cliquez ici pour une « piqûre de rappel » — promis, celle-ci ne vous fera pas mal ! 💉
+        </div>
+      </div>
+
+      <div class="event-recap">
+        <h3 style="color:#1a3a5c;font-size:15px;margin-bottom:8px;">📋 Récapitulatif</h3>
+        <dl>
+          <dt>📅 Date</dt><dd>Jeudi 21 mai 2026 à 19h30</dd>
+          <dt>📍 Lieu</dt><dd>Novotel Chartres — 5 ter av. Marcel Proust, 28000 Chartres</dd>
+          <dt>🩺 Intervenants</dt><dd>Dr Rim SAVATIER &amp; Dr Jean-Pierre BAROIN</dd>
+          <dt>🍽️ Programme</dt><dd>Cas cliniques, session Q&R, buffet dînatoire</dd>
+        </dl>
+      </div>
+    </div>
+  </div>
+
+  <!-- Admin Panel -->
+  <div class="admin-section">
+    <div class="admin-header" onclick="toggleAdmin()">
+      <span>🔐 Panneau Administrateur — Suivi des réponses</span>
+      <span id="adminArrow">▼</span>
+    </div>
+    <div class="admin-body" id="adminPanel">
+      <div class="stats">
+        <div class="stat-card stat-green"><div class="num" id="countParticipe">0</div><div class="label">Participent</div></div>
+        <div class="stat-card stat-orange"><div class="num" id="countPeutEtre">0</div><div class="label">Peut-être</div></div>
+        <div class="stat-card stat-yellow"><div class="num" id="countIndispo">0</div><div class="label">Indisponibles</div></div>
+        <div class="stat-card stat-gray"><div class="num" id="countPasInt">0</div><div class="label">Pas intéressés</div></div>
+      </div>
+      <table class="responses" id="responsesTable">
+        <thead><tr><th>Email</th><th>Réponse</th><th>Date</th></tr></thead>
+        <tbody id="responsesBody"></tbody>
+      </table>
+      <br>
+      <button class="btn-export" onclick="exportCSV()">📊 Exporter en CSV</button>
+    </div>
+  </div>
+
+</div>
+
+<div class="footer">
+  BIOPROJET &bull; VITALAIRE &bull; Réf. BPP/COM-MAT-INFO-0268
+</div>
+
+<script>
+// --- Response handling ---
+const RESPONSES_KEY = 'bioprojet_responses';
+const messages = {
+  'participe': {
+    icon: '🎉', title: 'Merci ! Votre participation est confirmée.',
+    msg: 'Nous avons hâte de vous accueillir au Novotel Chartres le 21 mai. N\'oubliez pas d\'ajouter l\'événement à votre calendrier ci-dessous !'
+  },
+  'peut-etre': {
+    icon: '🤔', title: 'Merci pour votre intérêt !',
+    msg: 'Nous comprenons que vous n\'êtes pas encore sûr(e). En attendant, ajoutez l\'événement à votre calendrier pour ne pas l\'oublier.'
+  },
+  'indisponible': {
+    icon: '📅', title: 'Dommage, vous nous manquerez !',
+    msg: 'Nous regrettons que vous ne puissiez pas être présent(e). Nous vous tiendrons informé(e) des prochains événements.'
+  },
+  'pas-interesse': {
+    icon: '👋', title: 'Merci pour votre retour.',
+    msg: 'Nous respectons votre choix. N\'hésitez pas à nous contacter si vous changez d\'avis.'
+  }
+};
+
+function getResponses() {
+  try { return JSON.parse(localStorage.getItem(RESPONSES_KEY) || '[]'); }
+  catch { return []; }
+}
+function saveResponse(email, response) {
+  const all = getResponses();
+  const existing = all.findIndex(r => r.email === email);
+  const entry = { email, response, date: new Date().toLocaleString('fr-FR') };
+  if (existing >= 0) all[existing] = entry; else all.push(entry);
+  localStorage.setItem(RESPONSES_KEY, JSON.stringify(all));
+}
+
+// Parse URL params
+const params = new URLSearchParams(window.location.search);
+const response = params.get('response');
+const email = params.get('email') || 'anonyme';
+
+if (response && messages[response]) {
+  const m = messages[response];
+  saveResponse(email, response);
+  document.getElementById('respIcon').textContent = m.icon;
+  document.getElementById('respTitle').textContent = m.title;
+  document.getElementById('respMsg').textContent = m.msg;
+  document.getElementById('icsCard').style.display = 'block';
+} else {
+  document.getElementById('respIcon').textContent = '📋';
+  document.getElementById('respTitle').textContent = 'Bienvenue';
+  document.getElementById('respMsg').textContent = 'Utilisez les boutons dans l\'email d\'invitation pour enregistrer votre réponse.';
+}
+
+// --- Admin panel ---
+function toggleAdmin() {
+  const p = document.getElementById('adminPanel');
+  const a = document.getElementById('adminArrow');
+  p.classList.toggle('show');
+  a.textContent = p.classList.contains('show') ? '▲' : '▼';
+  if (p.classList.contains('show')) refreshAdmin();
+}
+
+function refreshAdmin() {
+  const all = getResponses();
+  const counts = { 'participe':0, 'peut-etre':0, 'indisponible':0, 'pas-interesse':0 };
+  all.forEach(r => { if (counts[r.response] !== undefined) counts[r.response]++; });
+  document.getElementById('countParticipe').textContent = counts['participe'];
+  document.getElementById('countPeutEtre').textContent = counts['peut-etre'];
+  document.getElementById('countIndispo').textContent = counts['indisponible'];
+  document.getElementById('countPasInt').textContent = counts['pas-interesse'];
+
+  const badges = { 'participe':'badge-participe', 'peut-etre':'badge-peut-etre', 'indisponible':'badge-indisponible', 'pas-interesse':'badge-pas-interesse' };
+  const labels = { 'participe':'Participe', 'peut-etre':'Peut-être', 'indisponible':'Indisponible', 'pas-interesse':'Pas intéressé' };
+  const tbody = document.getElementById('responsesBody');
+  tbody.innerHTML = '';
+  all.forEach(r => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = '<td>'+r.email+'</td><td><span class="badge '+( badges[r.response]||'')+'">'+( labels[r.response]||r.response)+'</span></td><td>'+r.date+'</td>';
+    tbody.appendChild(tr);
+  });
+}
+
+function exportCSV() {
+  const all = getResponses();
+  let csv = 'Email,Réponse,Date\n';
+  all.forEach(r => { csv += '"'+r.email+'","'+r.response+'","'+r.date+'"\n'; });
+  const blob = new Blob([csv], {type:'text/csv;charset=utf-8;'});
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
+  a.download = 'reponses_bioprojet_21mai.csv'; a.click();
+}
+</script>
+</body>
+</html>
