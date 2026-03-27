@@ -50,6 +50,7 @@
   .btn-export { background:#e8833a; color:#fff; border:none; padding:10px 20px; border-radius:6px; cursor:pointer; font-size:13px; font-weight:600; margin-top:10px; }
   .btn-export:hover { background:#d4742f; }
   .footer { text-align:center; padding:20px; color:#aaa; font-size:11px; }
+  .debug-info { background:#fff3cd; border:1px solid #ffc107; border-radius:8px; padding:12px 16px; margin-top:15px; font-size:12px; color:#856404; text-align:left; display:none; }
 </style>
 </head>
 <body>
@@ -146,9 +147,25 @@ const messages = {
   }
 };
 
+// Alias mapping: accept alternative parameter values (French shortcuts, etc.)
+const responseAliases = {
+  'oui': 'participe',
+  'yes': 'participe',
+  'participe': 'participe',
+  'peut-etre': 'peut-etre',
+  'peut_etre': 'peut-etre',
+  'maybe': 'peut-etre',
+  'indisponible': 'indisponible',
+  'unavailable': 'indisponible',
+  'non': 'pas-interesse',
+  'no': 'pas-interesse',
+  'pas-interesse': 'pas-interesse',
+  'pas_interesse': 'pas-interesse'
+};
+
 function getResponses() {
   try { return JSON.parse(localStorage.getItem(RESPONSES_KEY) || '[]'); }
-  catch { return []; }
+  catch(e) { return []; }
 }
 function saveResponse(email, response) {
   const all = getResponses();
@@ -158,18 +175,26 @@ function saveResponse(email, response) {
   localStorage.setItem(RESPONSES_KEY, JSON.stringify(all));
 }
 
-// Parse URL params
+// Parse URL params — accept both "response" (English) and "reponse" (French)
 const params = new URLSearchParams(window.location.search);
-const response = params.get('response');
+const rawResponse = params.get('response') || params.get('reponse') || '';
 const email = params.get('email') || 'anonyme';
 
-if (response && messages[response]) {
-  const m = messages[response];
-  saveResponse(email, response);
+// Normalize: lowercase, trim, and resolve aliases
+const normalizedResponse = responseAliases[rawResponse.toLowerCase().trim()] || rawResponse.toLowerCase().trim();
+
+if (normalizedResponse && messages[normalizedResponse]) {
+  const m = messages[normalizedResponse];
+  saveResponse(email, normalizedResponse);
   document.getElementById('respIcon').textContent = m.icon;
   document.getElementById('respTitle').textContent = m.title;
   document.getElementById('respMsg').textContent = m.msg;
   document.getElementById('icsCard').style.display = 'block';
+} else if (rawResponse) {
+  // A response parameter was provided but not recognized
+  document.getElementById('respIcon').textContent = '⚠️';
+  document.getElementById('respTitle').textContent = 'Réponse non reconnue';
+  document.getElementById('respMsg').textContent = 'La valeur "' + rawResponse + '" n\'est pas reconnue. Valeurs acceptées : oui, peut-etre, indisponible, non (ou participe, peut-etre, indisponible, pas-interesse).';
 } else {
   document.getElementById('respIcon').textContent = '📋';
   document.getElementById('respTitle').textContent = 'Bienvenue';
@@ -200,7 +225,7 @@ function refreshAdmin() {
   tbody.innerHTML = '';
   all.forEach(r => {
     const tr = document.createElement('tr');
-    tr.innerHTML = '<td>'+r.email+'</td><td><span class="badge '+( badges[r.response]||'')+'">'+( labels[r.response]||r.response)+'</span></td><td>'+r.date+'</td>';
+    tr.innerHTML = '<td>'+r.email+'</td><td><span class="badge '+(badges[r.response]||'')+'">'+( labels[r.response]||r.response)+'</span></td><td>'+r.date+'</td>';
     tbody.appendChild(tr);
   });
 }
