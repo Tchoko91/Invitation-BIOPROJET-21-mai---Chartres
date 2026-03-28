@@ -15,8 +15,18 @@
   .card { background:#fff; border-radius:12px; box-shadow:0 4px 20px rgba(0,0,0,.08); overflow:hidden; }
   .card-body { padding:35px 30px; text-align:center; }
   .response-icon { font-size:60px; margin-bottom:15px; }
-  .response-title { font-size:22px; color:#1a3a5c; font-weight:700; margin-bottom:10px; }
-  .response-msg { color:#555; font-size:15px; line-height:1.6; margin-bottom:25px; }
+  .response-title { font-size:22px; font-weight:700; margin-bottom:10px; }
+  .response-msg { color:#555 ; font-size:15px; line-height:1.6; margin-bottom:25px; }
+  /* Color-coded card styles per response type */
+  .card-participe { border-top:5px solid #27ae60; }
+  .card-participe .response-title { color:#27ae60; }
+  .card-peut-etre { border-top:5px solid #e67e22; }
+  .card-peut-etre .response-title { color:#e67e22; }
+  .card-indisponible { border-top:5px solid #f1c40f; }
+  .card-indisponible .response-title { color:#9a8700; }
+  .card-pas-interesse { border-top:5px solid #95a5a6; }
+  .card-pas-interesse .response-title { color:#7f8c8d; }
+  .card-default .response-title { color:#1a3a5c; }
   .ics-box { background:#f0f5fa; border-radius:10px; padding:25px; margin:20px 0; border-left:4px solid #2d6a9f; }
   .ics-box h3 { color:#1a3a5c; font-size:16px; margin-bottom:10px; }
   .ics-box p { color:#888; font-size:13px; line-height:1.5; margin-bottom:15px; }
@@ -50,7 +60,6 @@
   .btn-export { background:#e8833a; color:#fff; border:none; padding:10px 20px; border-radius:6px; cursor:pointer; font-size:13px; font-weight:600; margin-top:10px; }
   .btn-export:hover { background:#d4742f; }
   .footer { text-align:center; padding:20px; color:#aaa; font-size:11px; }
-  .debug-info { background:#fff3cd; border:1px solid #ffc107; border-radius:8px; padding:12px 16px; margin-top:15px; font-size:12px; color:#856404; text-align:left; display:none; }
 </style>
 </head>
 <body>
@@ -65,7 +74,7 @@
 <div class="container">
 
   <!-- Confirmation Card (dynamic) -->
-  <div class="card" id="confirmCard">
+  <div class="card card-default" id="confirmCard">
     <div class="card-body" id="cardBody">
       <div class="response-icon" id="respIcon">⏳</div>
       <div class="response-title" id="respTitle">Enregistrement de votre réponse...</div>
@@ -73,7 +82,7 @@
     </div>
   </div>
 
-  <!-- ICS Download Box (shown after response) -->
+  <!-- ICS Download Box (shown for participe & peut-etre) -->
   <div class="card" id="icsCard" style="display:none;margin-top:20px;">
     <div class="card-body">
       <div class="ics-box">
@@ -128,39 +137,65 @@
 <script>
 // --- Response handling ---
 const RESPONSES_KEY = 'bioprojet_responses';
+
+// Response messages — keyed by canonical response ID
 const messages = {
   'participe': {
-    icon: '🎉', title: 'Merci ! Votre participation est confirmée.',
-    msg: 'Nous avons hâte de vous accueillir au Novotel Chartres le 21 mai. N\'oubliez pas d\'ajouter l\'événement à votre calendrier ci-dessous !'
+    icon: '🎉',
+    title: 'Intéressé(e) et participe !',
+    msg: 'Merci ! Votre participation est confirmée. Nous avons hâte de vous accueillir au Novotel Chartres le 21 mai. N\'oubliez pas d\'ajouter l\'événement à votre calendrier ci-dessous !',
+    cardClass: 'card-participe',
+    showIcs: true
   },
   'peut-etre': {
-    icon: '🤔', title: 'Merci pour votre intérêt !',
-    msg: 'Nous comprenons que vous n\'êtes pas encore sûr(e). En attendant, ajoutez l\'événement à votre calendrier pour ne pas l\'oublier.'
+    icon: '🤔',
+    title: 'Merci pour votre intérêt !',
+    msg: 'Nous comprenons que vous n\'êtes pas encore sûr(e). En attendant, ajoutez l\'événement à votre calendrier pour ne pas l\'oublier.',
+    cardClass: 'card-peut-etre',
+    showIcs: true
   },
   'indisponible': {
-    icon: '📅', title: 'Dommage, vous nous manquerez !',
-    msg: 'Nous regrettons que vous ne puissiez pas être présent(e). Nous vous tiendrons informé(e) des prochains événements.'
+    icon: '📅',
+    title: 'Dommage, vous nous manquerez !',
+    msg: 'Dommage, nous sommes désolés de ne pas pouvoir vous compter parmi nous pour cette belle soirée mais espérons vous retrouver une prochaine fois.',
+    cardClass: 'card-indisponible',
+    showIcs: false
   },
   'pas-interesse': {
-    icon: '👋', title: 'Merci pour votre retour.',
-    msg: 'Nous respectons votre choix. N\'hésitez pas à nous contacter si vous changez d\'avis.'
+    icon: '👋',
+    title: 'Merci pour votre retour.',
+    msg: 'Nous respectons votre choix. N\'hésitez pas à nous contacter si vous changez d\'avis.',
+    cardClass: 'card-pas-interesse',
+    showIcs: false
   }
 };
 
-// Alias mapping: accept alternative parameter values (French shortcuts, etc.)
+// Alias mapping: accept many alternative parameter values
+// This ensures that URLs like ?reponse=oui, ?response=participe, etc. all work
 const responseAliases = {
-  'oui': 'participe',
-  'yes': 'participe',
-  'participe': 'participe',
-  'peut-etre': 'peut-etre',
-  'peut_etre': 'peut-etre',
-  'maybe': 'peut-etre',
-  'indisponible': 'indisponible',
-  'unavailable': 'indisponible',
-  'non': 'pas-interesse',
-  'no': 'pas-interesse',
+  // Canonical keys (direct match)
+  'participe':     'participe',
+  'peut-etre':     'peut-etre',
+  'indisponible':  'indisponible',
   'pas-interesse': 'pas-interesse',
-  'pas_interesse': 'pas-interesse'
+  // French shorthand aliases
+  'oui':           'participe',
+  'non':           'pas-interesse',
+  // Underscore variants (URL-safe)
+  'peut_etre':     'peut-etre',
+  'pas_interesse': 'pas-interesse',
+  // English aliases
+  'yes':           'participe',
+  'no':            'pas-interesse',
+  'maybe':         'peut-etre',
+  'unavailable':   'indisponible',
+  // Additional robust aliases
+  'interesse':     'participe',
+  'ok':            'participe',
+  'present':       'participe',
+  'absent':        'indisponible',
+  'not-interested':'pas-interesse',
+  'not_interested':'pas-interesse'
 };
 
 function getResponses() {
@@ -168,33 +203,44 @@ function getResponses() {
   catch(e) { return []; }
 }
 function saveResponse(email, response) {
-  const all = getResponses();
-  const existing = all.findIndex(r => r.email === email);
-  const entry = { email, response, date: new Date().toLocaleString('fr-FR') };
+  var all = getResponses();
+  var existing = all.findIndex(function(r) { return r.email === email; });
+  var entry = { email: email, response: response, date: new Date().toLocaleString('fr-FR') };
   if (existing >= 0) all[existing] = entry; else all.push(entry);
   localStorage.setItem(RESPONSES_KEY, JSON.stringify(all));
 }
 
 // Parse URL params — accept both "response" (English) and "reponse" (French)
-const params = new URLSearchParams(window.location.search);
-const rawResponse = params.get('response') || params.get('reponse') || '';
-const email = params.get('email') || 'anonyme';
+var params = new URLSearchParams(window.location.search);
+var rawResponse = (params.get('response') || params.get('reponse') || '').toLowerCase().trim();
+var email = params.get('email') || 'anonyme';
 
-// Normalize: lowercase, trim, and resolve aliases
-const normalizedResponse = responseAliases[rawResponse.toLowerCase().trim()] || rawResponse.toLowerCase().trim();
+// Resolve alias to canonical response key
+var normalizedResponse = responseAliases[rawResponse] || null;
 
+// Display the appropriate message
 if (normalizedResponse && messages[normalizedResponse]) {
-  const m = messages[normalizedResponse];
+  var m = messages[normalizedResponse];
   saveResponse(email, normalizedResponse);
+
+  // Update card content
   document.getElementById('respIcon').textContent = m.icon;
   document.getElementById('respTitle').textContent = m.title;
   document.getElementById('respMsg').textContent = m.msg;
-  document.getElementById('icsCard').style.display = 'block';
+
+  // Apply color-coded card class
+  var card = document.getElementById('confirmCard');
+  card.className = 'card ' + m.cardClass;
+
+  // Show ICS download only for participe & peut-etre
+  if (m.showIcs) {
+    document.getElementById('icsCard').style.display = 'block';
+  }
 } else if (rawResponse) {
   // A response parameter was provided but not recognized
   document.getElementById('respIcon').textContent = '⚠️';
   document.getElementById('respTitle').textContent = 'Réponse non reconnue';
-  document.getElementById('respMsg').textContent = 'La valeur "' + rawResponse + '" n\'est pas reconnue. Valeurs acceptées : oui, peut-etre, indisponible, non (ou participe, peut-etre, indisponible, pas-interesse).';
+  document.getElementById('respMsg').textContent = 'La valeur "' + rawResponse + '" n\'est pas reconnue. Valeurs acceptées : oui, peut-etre, indisponible, non.';
 } else {
   document.getElementById('respIcon').textContent = '📋';
   document.getElementById('respTitle').textContent = 'Bienvenue';
@@ -203,39 +249,39 @@ if (normalizedResponse && messages[normalizedResponse]) {
 
 // --- Admin panel ---
 function toggleAdmin() {
-  const p = document.getElementById('adminPanel');
-  const a = document.getElementById('adminArrow');
+  var p = document.getElementById('adminPanel');
+  var a = document.getElementById('adminArrow');
   p.classList.toggle('show');
   a.textContent = p.classList.contains('show') ? '▲' : '▼';
   if (p.classList.contains('show')) refreshAdmin();
 }
 
 function refreshAdmin() {
-  const all = getResponses();
-  const counts = { 'participe':0, 'peut-etre':0, 'indisponible':0, 'pas-interesse':0 };
-  all.forEach(r => { if (counts[r.response] !== undefined) counts[r.response]++; });
+  var all = getResponses();
+  var counts = { 'participe':0, 'peut-etre':0, 'indisponible':0, 'pas-interesse':0 };
+  all.forEach(function(r) { if (counts[r.response] !== undefined) counts[r.response]++; });
   document.getElementById('countParticipe').textContent = counts['participe'];
   document.getElementById('countPeutEtre').textContent = counts['peut-etre'];
   document.getElementById('countIndispo').textContent = counts['indisponible'];
   document.getElementById('countPasInt').textContent = counts['pas-interesse'];
 
-  const badges = { 'participe':'badge-participe', 'peut-etre':'badge-peut-etre', 'indisponible':'badge-indisponible', 'pas-interesse':'badge-pas-interesse' };
-  const labels = { 'participe':'Participe', 'peut-etre':'Peut-être', 'indisponible':'Indisponible', 'pas-interesse':'Pas intéressé' };
-  const tbody = document.getElementById('responsesBody');
+  var badges = { 'participe':'badge-participe', 'peut-etre':'badge-peut-etre', 'indisponible':'badge-indisponible', 'pas-interesse':'badge-pas-interesse' };
+  var labels = { 'participe':'Participe', 'peut-etre':'Peut-être', 'indisponible':'Indisponible', 'pas-interesse':'Pas intéressé' };
+  var tbody = document.getElementById('responsesBody');
   tbody.innerHTML = '';
-  all.forEach(r => {
-    const tr = document.createElement('tr');
+  all.forEach(function(r) {
+    var tr = document.createElement('tr');
     tr.innerHTML = '<td>'+r.email+'</td><td><span class="badge '+(badges[r.response]||'')+'">'+( labels[r.response]||r.response)+'</span></td><td>'+r.date+'</td>';
     tbody.appendChild(tr);
   });
 }
 
 function exportCSV() {
-  const all = getResponses();
-  let csv = 'Email,Réponse,Date\n';
-  all.forEach(r => { csv += '"'+r.email+'","'+r.response+'","'+r.date+'"\n'; });
-  const blob = new Blob([csv], {type:'text/csv;charset=utf-8;'});
-  const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
+  var all = getResponses();
+  var csv = 'Email,Réponse,Date\n';
+  all.forEach(function(r) { csv += '"'+r.email+'","'+r.response+'","'+r.date+'"\n'; });
+  var blob = new Blob([csv], {type:'text/csv;charset=utf-8;'});
+  var a = document.createElement('a'); a.href = URL.createObjectURL(blob);
   a.download = 'reponses_bioprojet_21mai.csv'; a.click();
 }
 </script>
