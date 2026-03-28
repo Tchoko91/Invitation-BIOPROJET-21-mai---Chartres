@@ -16,7 +16,7 @@
   .card-body { padding:35px 30px; text-align:center; }
   .response-icon { font-size:60px; margin-bottom:15px; }
   .response-title { font-size:22px; font-weight:700; margin-bottom:10px; }
-  .response-msg { color:#555 ; font-size:15px; line-height:1.6; margin-bottom:25px; }
+  .response-msg { color:#555; font-size:15px; line-height:1.6; margin-bottom:25px; }
   /* Color-coded card styles per response type */
   .card-participe { border-top:5px solid #27ae60; }
   .card-participe .response-title { color:#27ae60; }
@@ -117,7 +117,7 @@
         <div class="stat-card stat-green"><div class="num" id="countParticipe">0</div><div class="label">Participent</div></div>
         <div class="stat-card stat-orange"><div class="num" id="countPeutEtre">0</div><div class="label">Peut-être</div></div>
         <div class="stat-card stat-yellow"><div class="num" id="countIndispo">0</div><div class="label">Indisponibles</div></div>
-        <div class="stat-card stat-gray"><div class="num" id="countPasInt">0</div><div class="label">Pas intéressés</div></div>
+        <div class="stat-card stat-gray"><div class="num" id="countPasInt">0</div><div class="label">Pas intéressé(e)s</div></div>
       </div>
       <table class="responses" id="responsesTable">
         <thead><tr><th>Email</th><th>Réponse</th><th>Date</th></tr></thead>
@@ -266,7 +266,7 @@ function refreshAdmin() {
   document.getElementById('countPasInt').textContent = counts['pas-interesse'];
 
   var badges = { 'participe':'badge-participe', 'peut-etre':'badge-peut-etre', 'indisponible':'badge-indisponible', 'pas-interesse':'badge-pas-interesse' };
-  var labels = { 'participe':'Participe', 'peut-etre':'Peut-être', 'indisponible':'Indisponible', 'pas-interesse':'Pas intéressé' };
+  var labels = { 'participe':'Participe', 'peut-etre':'Peut-être', 'indisponible':'Indisponible', 'pas-interesse':'Pas intéressé(e)' };
   var tbody = document.getElementById('responsesBody');
   tbody.innerHTML = '';
   all.forEach(function(r) {
