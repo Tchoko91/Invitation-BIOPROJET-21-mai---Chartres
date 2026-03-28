@@ -18,7 +18,6 @@
   .response-icon { font-size:60px; margin-bottom:15px; }
   .response-title { font-size:22px; font-weight:700; margin-bottom:10px; }
   .response-msg { color:#555; font-size:15px; line-height:1.6; margin-bottom:25px; }
-  /* Color-coded card styles */
   .card-toujours-pas { border-top:5px solid #e67e22; }
   .card-toujours-pas .response-title { color:#e67e22; }
   .card-oui-final { border-top:5px solid #27ae60; }
@@ -56,6 +55,38 @@
   .btn-export { background:#e8833a; color:#fff; border:none; padding:10px 20px; border-radius:6px; cursor:pointer; font-size:13px; font-weight:600; margin-top:10px; }
   .btn-export:hover { background:#d4742f; }
   .footer { text-align:center; padding:20px; color:#aaa; font-size:11px; }
+
+  /* ===== PASSWORD MODAL ===== */
+  .pwd-overlay {
+    display:none; position:fixed; top:0; left:0; width:100%; height:100%;
+    background:rgba(0,0,0,.55); z-index:9999; justify-content:center; align-items:center;
+  }
+  .pwd-overlay.active { display:flex; }
+  .pwd-modal {
+    background:#fff; border-radius:14px; padding:35px 30px; max-width:380px; width:90%;
+    box-shadow:0 20px 60px rgba(0,0,0,.3); text-align:center; animation:modalIn .25s ease;
+  }
+  @keyframes modalIn { from { transform:scale(.9); opacity:0; } to { transform:scale(1); opacity:1; } }
+  .pwd-modal .lock-icon { font-size:48px; margin-bottom:12px; }
+  .pwd-modal h3 { color:#1a3a5c; font-size:18px; margin-bottom:6px; }
+  .pwd-modal p { color:#888; font-size:13px; margin-bottom:18px; }
+  .pwd-modal input[type="password"] {
+    width:100%; padding:12px 16px; border:2px solid #ddd; border-radius:8px;
+    font-size:15px; text-align:center; outline:none; transition:border-color .2s;
+  }
+  .pwd-modal input[type="password"]:focus { border-color:#2d6a9f; }
+  .pwd-modal .pwd-error { color:#e74c3c; font-size:13px; margin-top:8px; display:none; }
+  .pwd-modal .pwd-buttons { margin-top:18px; display:flex; gap:10px; justify-content:center; }
+  .pwd-modal .btn-validate {
+    background:#1a3a5c; color:#fff; border:none; padding:11px 28px;
+    border-radius:8px; font-size:14px; font-weight:600; cursor:pointer; transition:background .2s;
+  }
+  .pwd-modal .btn-validate:hover { background:#2d6a9f; }
+  .pwd-modal .btn-cancel {
+    background:#eee; color:#666; border:none; padding:11px 28px;
+    border-radius:8px; font-size:14px; font-weight:600; cursor:pointer; transition:background .2s;
+  }
+  .pwd-modal .btn-cancel:hover { background:#ddd; }
 </style>
 </head>
 <body>
@@ -99,7 +130,7 @@
     </div>
   </div>
 
-  <!-- Admin Panel (hidden, accessible via 5 clicks on logo) -->
+  <!-- Admin Panel (hidden, requires 5 clicks + password) -->
   <div class="admin-section" id="adminSection">
     <div class="admin-header" onclick="toggleAdmin()">
       <span>🔐 Panneau Administrateur — Suivi des réponses de relance J-9</span>
@@ -126,8 +157,26 @@
   BIOPROJET &bull; VITALAIRE &bull; Réf. BPP/COM-MAT-INFO-0268
 </div>
 
+<!-- ===== PASSWORD MODAL ===== -->
+<div class="pwd-overlay" id="pwdOverlay">
+  <div class="pwd-modal">
+    <div class="lock-icon">🔒</div>
+    <h3>Accès Administrateur</h3>
+    <p>Veuillez saisir le mot de passe pour accéder au panneau de suivi.</p>
+    <input type="password" id="pwdInput" placeholder="Mot de passe" autocomplete="off">
+    <div class="pwd-error" id="pwdError">❌ Mot de passe incorrect. Accès refusé.</div>
+    <div class="pwd-buttons">
+      <button class="btn-cancel" onclick="closePasswordModal()">Annuler</button>
+      <button class="btn-validate" onclick="validatePassword()">Valider</button>
+    </div>
+  </div>
+</div>
+
 <script>
-// --- 5-click admin access ---
+// ===== ADMIN PASSWORD (change here if needed) =====
+var ADMIN_PASSWORD = 'bioprojet2026';
+
+// --- 5-click admin access with password ---
 var clickCount = 0;
 var clickTimer = null;
 document.getElementById('logoClick').addEventListener('click', function() {
@@ -135,10 +184,49 @@ document.getElementById('logoClick').addEventListener('click', function() {
   if (clickTimer) clearTimeout(clickTimer);
   clickTimer = setTimeout(function() { clickCount = 0; }, 2000);
   if (clickCount >= 5) {
-    document.getElementById('adminSection').style.display = 'block';
     clickCount = 0;
-    refreshAdmin();
+    showPasswordModal();
   }
+});
+
+function showPasswordModal() {
+  document.getElementById('pwdOverlay').classList.add('active');
+  document.getElementById('pwdInput').value = '';
+  document.getElementById('pwdError').style.display = 'none';
+  setTimeout(function() { document.getElementById('pwdInput').focus(); }, 100);
+}
+
+function closePasswordModal() {
+  document.getElementById('pwdOverlay').classList.remove('active');
+  document.getElementById('pwdInput').value = '';
+  document.getElementById('pwdError').style.display = 'none';
+}
+
+function validatePassword() {
+  var pwd = document.getElementById('pwdInput').value;
+  if (pwd === ADMIN_PASSWORD) {
+    closePasswordModal();
+    document.getElementById('adminSection').style.display = 'block';
+    refreshAdmin();
+    setTimeout(function() {
+      document.getElementById('adminSection').scrollIntoView({ behavior:'smooth', block:'start' });
+    }, 100);
+  } else {
+    document.getElementById('pwdError').style.display = 'block';
+    document.getElementById('pwdInput').value = '';
+    document.getElementById('pwdInput').focus();
+  }
+}
+
+// Allow Enter key to validate
+document.getElementById('pwdInput').addEventListener('keydown', function(e) {
+  if (e.key === 'Enter') validatePassword();
+  if (e.key !== 'Enter') document.getElementById('pwdError').style.display = 'none';
+});
+
+// Close modal on overlay click
+document.getElementById('pwdOverlay').addEventListener('click', function(e) {
+  if (e.target === this) closePasswordModal();
 });
 
 // --- Separate localStorage key for relance responses ---
@@ -146,25 +234,19 @@ var RELANCE_KEY = 'bioprojet_relance_j9_responses';
 
 var messages = {
   'toujours-pas': {
-    icon: '🤔',
-    title: 'Merci pour votre réponse',
+    icon: '🤔', title: 'Merci pour votre réponse',
     msg: 'Merci pour votre réponse, cela nous aidera à organiser au mieux la soirée. Nous comprenons votre hésitation.',
-    cardClass: 'card-toujours-pas',
-    showIcs: false
+    cardClass: 'card-toujours-pas', showIcs: false
   },
   'oui-final': {
-    icon: '🎉',
-    title: 'Merci pour votre réponse',
+    icon: '🎉', title: 'Merci pour votre réponse',
     msg: 'Merci pour votre réponse, cela nous aidera à organiser au mieux la soirée. Nous sommes ravis de vous compter parmi nous !',
-    cardClass: 'card-oui-final',
-    showIcs: true
+    cardClass: 'card-oui-final', showIcs: true
   },
   'non-final': {
-    icon: '👋',
-    title: 'Merci pour votre réponse',
+    icon: '👋', title: 'Merci pour votre réponse',
     msg: 'Merci pour votre réponse, cela nous aidera à organiser au mieux la soirée. Nous espérons vous voir une prochaine fois.',
-    cardClass: 'card-non-final',
-    showIcs: false
+    cardClass: 'card-non-final', showIcs: false
   }
 };
 
@@ -180,7 +262,6 @@ function saveResponse(email, response) {
   localStorage.setItem(RELANCE_KEY, JSON.stringify(all));
 }
 
-// Parse URL params
 var params = new URLSearchParams(window.location.search);
 var rawResponse = (params.get('reponse_relance') || '').toLowerCase().trim();
 var email = params.get('email') || 'anonyme';
@@ -188,17 +269,11 @@ var email = params.get('email') || 'anonyme';
 if (rawResponse && messages[rawResponse]) {
   var m = messages[rawResponse];
   saveResponse(email, rawResponse);
-
   document.getElementById('respIcon').textContent = m.icon;
   document.getElementById('respTitle').textContent = m.title;
   document.getElementById('respMsg').textContent = m.msg;
-
-  var card = document.getElementById('confirmCard');
-  card.className = 'card ' + m.cardClass;
-
-  if (m.showIcs) {
-    document.getElementById('icsCard').style.display = 'block';
-  }
+  document.getElementById('confirmCard').className = 'card ' + m.cardClass;
+  if (m.showIcs) document.getElementById('icsCard').style.display = 'block';
 } else if (rawResponse) {
   document.getElementById('respIcon').textContent = '⚠️';
   document.getElementById('respTitle').textContent = 'Réponse non reconnue';
