@@ -45,6 +45,11 @@
   .stat-orange .num { color:#e67e22; }
   .stat-green .num { color:#27ae60; }
   .stat-gray .num { color:#95a5a6; }
+  .stat-total { grid-column:1/-1; background:linear-gradient(135deg,#1a3a5c,#2d6a9f); border-radius:8px; padding:15px; text-align:center; }
+  .stat-total .num { font-size:32px; font-weight:700; color:#fff; }
+  .stat-total .label { font-size:13px; color:#c5dff0; margin-top:4px; }
+  .info-note { background:#fff8e1; border-left:4px solid #f1c40f; padding:12px 16px; margin-bottom:20px; border-radius:0 8px 8px 0; font-size:12px; color:#666; line-height:1.5; }
+  .info-note strong { color:#1a3a5c; }
   table.responses { width:100%; border-collapse:collapse; font-size:13px; }
   table.responses th { background:#f0f5fa; color:#1a3a5c; padding:10px; text-align:left; }
   table.responses td { padding:10px; border-bottom:1px solid #eee; }
@@ -138,7 +143,11 @@
       <span id="adminArrow">▼</span>
     </div>
     <div class="admin-body" id="adminPanel">
+      <div class="info-note">
+        <strong>ℹ️ Comment fonctionne le comptage ?</strong> Chaque personne qui clique sur un bouton de réponse dans l'email de relance est redirigée vers cette page. Sa réponse est enregistrée automatiquement. Les réponses se <strong>cumulent</strong> : chaque nouvelle réponse s'ajoute au compteur. Si une même personne change d'avis, sa réponse précédente est mise à jour (pas de doublon par email).
+      </div>
       <div class="stats">
+        <div class="stat-card stat-total"><div class="num" id="countTotal">0</div><div class="label">Total des réponses</div></div>
         <div class="stat-card stat-orange"><div class="num" id="countToujoursPas">0</div><div class="label">Ne savent toujours pas</div></div>
         <div class="stat-card stat-green"><div class="num" id="countOuiFinal">0</div><div class="label">Oui, participent</div></div>
         <div class="stat-card stat-gray"><div class="num" id="countNonFinal">0</div><div class="label">Non, ne participent pas</div></div>
@@ -298,6 +307,7 @@ function refreshAdmin() {
   var all = getResponses();
   var counts = { 'toujours-pas':0, 'oui-final':0, 'non-final':0 };
   all.forEach(function(r) { if (counts[r.response] !== undefined) counts[r.response]++; });
+  document.getElementById('countTotal').textContent = all.length;
   document.getElementById('countToujoursPas').textContent = counts['toujours-pas'];
   document.getElementById('countOuiFinal').textContent = counts['oui-final'];
   document.getElementById('countNonFinal').textContent = counts['non-final'];
