@@ -88,6 +88,7 @@
   }
   .pwd-modal .btn-cancel:hover { background:#ddd; }
 </style>
+<script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
 </head>
 <body>
 
@@ -147,7 +148,7 @@
         <tbody id="responsesBody"></tbody>
       </table>
       <br>
-      <button class="btn-export" onclick="exportCSV()">📊 Exporter en CSV</button>
+      <button class="btn-export" onclick="exportExcel()">📊 Exporter en Excel (.xlsx)</button>
     </div>
   </div>
 
@@ -312,13 +313,18 @@ function refreshAdmin() {
   });
 }
 
-function exportCSV() {
+function exportExcel() {
   var all = getResponses();
-  var csv = 'Email,Réponse Relance,Date\n';
-  all.forEach(function(r) { csv += '"'+r.email+'","'+r.response+'","'+r.date+'"\n'; });
-  var blob = new Blob([csv], {type:'text/csv;charset=utf-8;'});
-  var a = document.createElement('a'); a.href = URL.createObjectURL(blob);
-  a.download = 'reponses_relance_j9_bioprojet.csv'; a.click();
+  var labels = { 'toujours-pas':'Ne sait toujours pas', 'oui-final':'Oui, participe', 'non-final':'Non, ne participe pas' };
+  var data = all.map(function(r) {
+    return { 'Email': r.email, 'Réponse Relance': labels[r.response] || r.response, 'Date': r.date };
+  });
+  var ws = XLSX.utils.json_to_sheet(data);
+  /* Auto-size columns */
+  ws['!cols'] = [{ wch: 30 }, { wch: 25 }, { wch: 22 }];
+  var wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'Réponses Relance J-9');
+  XLSX.writeFile(wb, 'reponses_relance_j9_bioprojet.xlsx');
 }
 </script>
 </body>
