@@ -7,17 +7,17 @@
 <style>
   * { margin:0; padding:0; box-sizing:border-box; }
   body { font-family:'Segoe UI',Roboto,Helvetica,Arial,sans-serif; background:#f4f6f9; min-height:100vh; display:flex; flex-direction:column; }
-  .header { background:linear-gradient(135deg,#1a3a5c,#2d6a9f,#1a3a5c); color:#fff; text-align:center; padding:40px 20px; }
+  .header { background:linear-gradient(135deg,#1a3a5c,#2d6a9f,#1a3a5c); color:#fff; text-align:center; padding:40px 20px; position:relative; }
   .header h1 { font-size:26px; margin-bottom:8px; }
   .header .sub { color:#c5dff0; font-size:14px; }
   .header .bar { width:60px; height:3px; background:#e8833a; margin:12px auto; border-radius:2px; }
+  .logo-click { cursor:default; user-select:none; }
   .container { max-width:600px; margin:-30px auto 40px; padding:0 20px; flex:1; width:100%; }
   .card { background:#fff; border-radius:12px; box-shadow:0 4px 20px rgba(0,0,0,.08); overflow:hidden; }
   .card-body { padding:35px 30px; text-align:center; }
   .response-icon { font-size:60px; margin-bottom:15px; }
   .response-title { font-size:22px; font-weight:700; margin-bottom:10px; }
   .response-msg { color:#555; font-size:15px; line-height:1.6; margin-bottom:25px; }
-  /* Color-coded card styles per response type */
   .card-participe { border-top:5px solid #27ae60; }
   .card-participe .response-title { color:#27ae60; }
   .card-peut-etre { border-top:5px solid #e67e22; }
@@ -36,7 +36,7 @@
   .event-recap { text-align:left; margin:25px 0; }
   .event-recap dt { color:#2d6a9f; font-weight:600; font-size:13px; margin-top:10px; }
   .event-recap dd { color:#333; font-size:14px; margin-left:0; }
-  .admin-section { background:#fff; border-radius:12px; box-shadow:0 4px 20px rgba(0,0,0,.08); margin-top:25px; overflow:hidden; }
+  .admin-section { background:#fff; border-radius:12px; box-shadow:0 4px 20px rgba(0,0,0,.08); margin-top:25px; overflow:hidden; display:none; }
   .admin-header { background:#1a3a5c; color:#fff; padding:15px 25px; font-size:16px; font-weight:600; cursor:pointer; display:flex; justify-content:space-between; align-items:center; }
   .admin-header:hover { background:#15304d; }
   .admin-body { padding:25px; display:none; }
@@ -60,12 +60,44 @@
   .btn-export { background:#e8833a; color:#fff; border:none; padding:10px 20px; border-radius:6px; cursor:pointer; font-size:13px; font-weight:600; margin-top:10px; }
   .btn-export:hover { background:#d4742f; }
   .footer { text-align:center; padding:20px; color:#aaa; font-size:11px; }
+
+  /* ===== PASSWORD MODAL ===== */
+  .pwd-overlay {
+    display:none; position:fixed; top:0; left:0; width:100%; height:100%;
+    background:rgba(0,0,0,.55); z-index:9999; justify-content:center; align-items:center;
+  }
+  .pwd-overlay.active { display:flex; }
+  .pwd-modal {
+    background:#fff; border-radius:14px; padding:35px 30px; max-width:380px; width:90%;
+    box-shadow:0 20px 60px rgba(0,0,0,.3); text-align:center; animation:modalIn .25s ease;
+  }
+  @keyframes modalIn { from { transform:scale(.9); opacity:0; } to { transform:scale(1); opacity:1; } }
+  .pwd-modal .lock-icon { font-size:48px; margin-bottom:12px; }
+  .pwd-modal h3 { color:#1a3a5c; font-size:18px; margin-bottom:6px; }
+  .pwd-modal p { color:#888; font-size:13px; margin-bottom:18px; }
+  .pwd-modal input[type="password"] {
+    width:100%; padding:12px 16px; border:2px solid #ddd; border-radius:8px;
+    font-size:15px; text-align:center; outline:none; transition:border-color .2s;
+  }
+  .pwd-modal input[type="password"]:focus { border-color:#2d6a9f; }
+  .pwd-modal .pwd-error { color:#e74c3c; font-size:13px; margin-top:8px; display:none; }
+  .pwd-modal .pwd-buttons { margin-top:18px; display:flex; gap:10px; justify-content:center; }
+  .pwd-modal .btn-validate {
+    background:#1a3a5c; color:#fff; border:none; padding:11px 28px;
+    border-radius:8px; font-size:14px; font-weight:600; cursor:pointer; transition:background .2s;
+  }
+  .pwd-modal .btn-validate:hover { background:#2d6a9f; }
+  .pwd-modal .btn-cancel {
+    background:#eee; color:#666; border:none; padding:11px 28px;
+    border-radius:8px; font-size:14px; font-weight:600; cursor:pointer; transition:background .2s;
+  }
+  .pwd-modal .btn-cancel:hover { background:#ddd; }
 </style>
 </head>
 <body>
 
 <div class="header">
-  <div style="font-size:12px;letter-spacing:2px;color:#8bbde0;text-transform:uppercase;margin-bottom:6px;">Conférence Médicale</div>
+  <div class="logo-click" id="logoClick" style="font-size:12px;letter-spacing:2px;color:#8bbde0;text-transform:uppercase;margin-bottom:6px;">Conférence Médicale</div>
   <h1>Somnolence et Risque Accidentel</h1>
   <div class="bar"></div>
   <div class="sub">Jeudi 21 mai 2026 — 19h30 — Novotel Chartres</div>
@@ -106,8 +138,8 @@
     </div>
   </div>
 
-  <!-- Admin Panel -->
-  <div class="admin-section">
+  <!-- Admin Panel (hidden, requires 5 clicks + password) -->
+  <div class="admin-section" id="adminSection">
     <div class="admin-header" onclick="toggleAdmin()">
       <span>🔐 Panneau Administrateur — Suivi des réponses</span>
       <span id="adminArrow">▼</span>
@@ -134,68 +166,112 @@
   BIOPROJET &bull; VITALAIRE &bull; Réf. BPP/COM-MAT-INFO-0268
 </div>
 
-<script>
-// --- Response handling ---
-const RESPONSES_KEY = 'bioprojet_responses';
+<!-- ===== PASSWORD MODAL ===== -->
+<div class="pwd-overlay" id="pwdOverlay">
+  <div class="pwd-modal">
+    <div class="lock-icon">🔒</div>
+    <h3>Accès Administrateur</h3>
+    <p>Veuillez saisir le mot de passe pour accéder au panneau de suivi.</p>
+    <input type="password" id="pwdInput" placeholder="Mot de passe" autocomplete="off">
+    <div class="pwd-error" id="pwdError">❌ Mot de passe incorrect. Accès refusé.</div>
+    <div class="pwd-buttons">
+      <button class="btn-cancel" onclick="closePasswordModal()">Annuler</button>
+      <button class="btn-validate" onclick="validatePassword()">Valider</button>
+    </div>
+  </div>
+</div>
 
-// Response messages — keyed by canonical response ID
-const messages = {
+<script>
+// ===== ADMIN PASSWORD (change here if needed) =====
+var ADMIN_PASSWORD = 'bioprojet2026';
+
+// --- 5-click admin access with password ---
+var clickCount = 0;
+var clickTimer = null;
+document.getElementById('logoClick').addEventListener('click', function() {
+  clickCount++;
+  if (clickTimer) clearTimeout(clickTimer);
+  clickTimer = setTimeout(function() { clickCount = 0; }, 2000);
+  if (clickCount >= 5) {
+    clickCount = 0;
+    showPasswordModal();
+  }
+});
+
+function showPasswordModal() {
+  document.getElementById('pwdOverlay').classList.add('active');
+  document.getElementById('pwdInput').value = '';
+  document.getElementById('pwdError').style.display = 'none';
+  setTimeout(function() { document.getElementById('pwdInput').focus(); }, 100);
+}
+
+function closePasswordModal() {
+  document.getElementById('pwdOverlay').classList.remove('active');
+  document.getElementById('pwdInput').value = '';
+  document.getElementById('pwdError').style.display = 'none';
+}
+
+function validatePassword() {
+  var pwd = document.getElementById('pwdInput').value;
+  if (pwd === ADMIN_PASSWORD) {
+    closePasswordModal();
+    document.getElementById('adminSection').style.display = 'block';
+    refreshAdmin();
+    // Scroll to admin panel
+    setTimeout(function() {
+      document.getElementById('adminSection').scrollIntoView({ behavior:'smooth', block:'start' });
+    }, 100);
+  } else {
+    document.getElementById('pwdError').style.display = 'block';
+    document.getElementById('pwdInput').value = '';
+    document.getElementById('pwdInput').focus();
+  }
+}
+
+// Allow Enter key to validate
+document.getElementById('pwdInput').addEventListener('keydown', function(e) {
+  if (e.key === 'Enter') validatePassword();
+  // Hide error on new input
+  if (e.key !== 'Enter') document.getElementById('pwdError').style.display = 'none';
+});
+
+// Close modal on overlay click
+document.getElementById('pwdOverlay').addEventListener('click', function(e) {
+  if (e.target === this) closePasswordModal();
+});
+
+// --- Response handling ---
+var RESPONSES_KEY = 'bioprojet_responses';
+
+var messages = {
   'participe': {
-    icon: '🎉',
-    title: 'Intéressé(e) et participe !',
+    icon: '🎉', title: 'Intéressé(e) et participe !',
     msg: 'Merci ! Votre participation est confirmée. Nous avons hâte de vous accueillir au Novotel Chartres le 21 mai. N\'oubliez pas d\'ajouter l\'événement à votre calendrier ci-dessous !',
-    cardClass: 'card-participe',
-    showIcs: true
+    cardClass: 'card-participe', showIcs: true
   },
   'peut-etre': {
-    icon: '🤔',
-    title: 'Merci pour votre intérêt !',
+    icon: '🤔', title: 'Merci pour votre intérêt !',
     msg: 'Nous comprenons que vous n\'êtes pas encore sûr(e). En attendant, ajoutez l\'événement à votre calendrier pour ne pas l\'oublier.',
-    cardClass: 'card-peut-etre',
-    showIcs: true
+    cardClass: 'card-peut-etre', showIcs: true
   },
   'indisponible': {
-    icon: '📅',
-    title: 'Dommage, vous nous manquerez !',
+    icon: '📅', title: 'Dommage, vous nous manquerez !',
     msg: 'Dommage, nous sommes désolés de ne pas pouvoir vous compter parmi nous pour cette belle soirée mais espérons vous retrouver une prochaine fois.',
-    cardClass: 'card-indisponible',
-    showIcs: false
+    cardClass: 'card-indisponible', showIcs: false
   },
   'pas-interesse': {
-    icon: '👋',
-    title: 'Merci pour votre retour.',
+    icon: '👋', title: 'Merci pour votre retour.',
     msg: 'Nous respectons votre choix. N\'hésitez pas à nous contacter si vous changez d\'avis.',
-    cardClass: 'card-pas-interesse',
-    showIcs: false
+    cardClass: 'card-pas-interesse', showIcs: false
   }
 };
 
-// Alias mapping: accept many alternative parameter values
-// This ensures that URLs like ?reponse=oui, ?response=participe, etc. all work
-const responseAliases = {
-  // Canonical keys (direct match)
-  'participe':     'participe',
-  'peut-etre':     'peut-etre',
-  'indisponible':  'indisponible',
-  'pas-interesse': 'pas-interesse',
-  // French shorthand aliases
-  'oui':           'participe',
-  'non':           'pas-interesse',
-  // Underscore variants (URL-safe)
-  'peut_etre':     'peut-etre',
-  'pas_interesse': 'pas-interesse',
-  // English aliases
-  'yes':           'participe',
-  'no':            'pas-interesse',
-  'maybe':         'peut-etre',
-  'unavailable':   'indisponible',
-  // Additional robust aliases
-  'interesse':     'participe',
-  'ok':            'participe',
-  'present':       'participe',
-  'absent':        'indisponible',
-  'not-interested':'pas-interesse',
-  'not_interested':'pas-interesse'
+var responseAliases = {
+  'participe':'participe', 'peut-etre':'peut-etre', 'indisponible':'indisponible', 'pas-interesse':'pas-interesse',
+  'oui':'participe', 'non':'pas-interesse', 'peut_etre':'peut-etre', 'pas_interesse':'pas-interesse',
+  'yes':'participe', 'no':'pas-interesse', 'maybe':'peut-etre', 'unavailable':'indisponible',
+  'interesse':'participe', 'ok':'participe', 'present':'participe', 'absent':'indisponible',
+  'not-interested':'pas-interesse', 'not_interested':'pas-interesse'
 };
 
 function getResponses() {
@@ -210,34 +286,20 @@ function saveResponse(email, response) {
   localStorage.setItem(RESPONSES_KEY, JSON.stringify(all));
 }
 
-// Parse URL params — accept both "response" (English) and "reponse" (French)
 var params = new URLSearchParams(window.location.search);
 var rawResponse = (params.get('response') || params.get('reponse') || '').toLowerCase().trim();
 var email = params.get('email') || 'anonyme';
-
-// Resolve alias to canonical response key
 var normalizedResponse = responseAliases[rawResponse] || null;
 
-// Display the appropriate message
 if (normalizedResponse && messages[normalizedResponse]) {
   var m = messages[normalizedResponse];
   saveResponse(email, normalizedResponse);
-
-  // Update card content
   document.getElementById('respIcon').textContent = m.icon;
   document.getElementById('respTitle').textContent = m.title;
   document.getElementById('respMsg').textContent = m.msg;
-
-  // Apply color-coded card class
-  var card = document.getElementById('confirmCard');
-  card.className = 'card ' + m.cardClass;
-
-  // Show ICS download only for participe & peut-etre
-  if (m.showIcs) {
-    document.getElementById('icsCard').style.display = 'block';
-  }
+  document.getElementById('confirmCard').className = 'card ' + m.cardClass;
+  if (m.showIcs) document.getElementById('icsCard').style.display = 'block';
 } else if (rawResponse) {
-  // A response parameter was provided but not recognized
   document.getElementById('respIcon').textContent = '⚠️';
   document.getElementById('respTitle').textContent = 'Réponse non reconnue';
   document.getElementById('respMsg').textContent = 'La valeur "' + rawResponse + '" n\'est pas reconnue. Valeurs acceptées : oui, peut-etre, indisponible, non.';
