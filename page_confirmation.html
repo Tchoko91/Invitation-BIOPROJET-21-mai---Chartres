@@ -20,8 +20,8 @@
   .response-msg { color:#555; font-size:15px; line-height:1.6; margin-bottom:25px; }
   .card-participe { border-top:5px solid #27ae60; }
   .card-participe .response-title { color:#27ae60; }
-  .card-peut-etre { border-top:5px solid #e67e22; }
-  .card-peut-etre .response-title { color:#e67e22; }
+  .card-ne-sait-pas { border-top:5px solid #e67e22; }
+  .card-ne-sait-pas .response-title { color:#e67e22; }
   .card-indisponible { border-top:5px solid #f1c40f; }
   .card-indisponible .response-title { color:#9a8700; }
   .card-pas-interesse { border-top:5px solid #95a5a6; }
@@ -41,7 +41,7 @@
   .admin-header:hover { background:#15304d; }
   .admin-body { padding:25px; display:none; }
   .admin-body.show { display:block; }
-  .stats { display:grid; grid-template-columns:repeat(2,1fr); gap:12px; margin-bottom:20px; }
+  .stats { display:grid; grid-template-columns:repeat(4,1fr); gap:12px; margin-bottom:20px; }
   .stat-card { background:#f8f9fb; border-radius:8px; padding:15px; text-align:center; }
   .stat-card .num { font-size:28px; font-weight:700; }
   .stat-card .label { font-size:12px; color:#888; margin-top:4px; }
@@ -59,7 +59,7 @@
   table.responses td { padding:10px; border-bottom:1px solid #eee; }
   .badge { display:inline-block; padding:3px 10px; border-radius:12px; font-size:11px; font-weight:600; color:#fff; }
   .badge-participe { background:#27ae60; }
-  .badge-peut-etre { background:#e67e22; }
+  .badge-ne-sait-pas { background:#e67e22; }
   .badge-indisponible { background:#f1c40f; color:#333; }
   .badge-pas-interesse { background:#95a5a6; }
   .btn-export { background:#e8833a; color:#fff; border:none; padding:10px 20px; border-radius:6px; cursor:pointer; font-size:13px; font-weight:600; margin-top:10px; }
@@ -156,10 +156,10 @@
       </div>
       <div class="stats">
         <div class="stat-card stat-total"><div class="num" id="countTotal">0</div><div class="label">Total des réponses</div></div>
-        <div class="stat-card stat-green"><div class="num" id="countParticipe">0</div><div class="label">Participent</div></div>
-        <div class="stat-card stat-orange"><div class="num" id="countPeutEtre">0</div><div class="label">Peut-être</div></div>
-        <div class="stat-card stat-yellow"><div class="num" id="countIndispo">0</div><div class="label">Indisponibles</div></div>
-        <div class="stat-card stat-gray"><div class="num" id="countPasInt">0</div><div class="label">Pas intéressé(e)s</div></div>
+        <div class="stat-card stat-green"><div class="num" id="countParticipe">0</div><div class="label">Intéressé(e) et je participe</div></div>
+        <div class="stat-card stat-orange"><div class="num" id="countNeSaitPas">0</div><div class="label">Intéressé(e) mais je ne sais pas encore</div></div>
+        <div class="stat-card stat-yellow"><div class="num" id="countIndispo">0</div><div class="label">Intéressé(e) mais indisponible</div></div>
+        <div class="stat-card stat-gray"><div class="num" id="countPasInt">0</div><div class="label">Pas intéressé(e)</div></div>
       </div>
       <table class="responses" id="responsesTable">
         <thead><tr><th>Email</th><th>Réponse</th><th>Date</th></tr></thead>
@@ -255,31 +255,33 @@ var RESPONSES_KEY = 'bioprojet_responses';
 
 var messages = {
   'participe': {
-    icon: '🎉', title: 'Intéressé(e) et participe !',
+    icon: '', title: 'Intéressé(e) et je participe',
     msg: 'Merci ! Votre participation est confirmée. Nous avons hâte de vous accueillir au Novotel Chartres le 21 mai. N\'oubliez pas d\'ajouter l\'événement à votre calendrier ci-dessous !',
     cardClass: 'card-participe', showIcs: true
   },
-  'peut-etre': {
-    icon: '🤔', title: 'Merci pour votre intérêt !',
+  'ne-sait-pas': {
+    icon: '', title: 'Intéressé(e) mais je ne sais pas encore',
     msg: 'Nous comprenons que vous n\'êtes pas encore sûr(e). En attendant, ajoutez l\'événement à votre calendrier pour ne pas l\'oublier.',
-    cardClass: 'card-peut-etre', showIcs: true
+    cardClass: 'card-ne-sait-pas', showIcs: true
   },
   'indisponible': {
-    icon: '📅', title: 'Dommage, vous nous manquerez !',
+    icon: '', title: 'Intéressé(e) mais indisponible',
     msg: 'Dommage, nous sommes désolés de ne pas pouvoir vous compter parmi nous pour cette belle soirée mais espérons vous retrouver une prochaine fois.',
     cardClass: 'card-indisponible', showIcs: false
   },
   'pas-interesse': {
-    icon: '👋', title: 'Merci pour votre retour.',
+    icon: '', title: 'Pas intéressé(e)',
     msg: 'Nous respectons votre choix. N\'hésitez pas à nous contacter si vous changez d\'avis.',
     cardClass: 'card-pas-interesse', showIcs: false
   }
 };
 
 var responseAliases = {
-  'participe':'participe', 'peut-etre':'peut-etre', 'indisponible':'indisponible', 'pas-interesse':'pas-interesse',
-  'oui':'participe', 'non':'pas-interesse', 'peut_etre':'peut-etre', 'pas_interesse':'pas-interesse',
-  'yes':'participe', 'no':'pas-interesse', 'maybe':'peut-etre', 'unavailable':'indisponible',
+  'participe':'participe', 'ne-sait-pas':'ne-sait-pas', 'indisponible':'indisponible', 'pas-interesse':'pas-interesse',
+  'ne_sait_pas':'ne-sait-pas', 'pas_interesse':'pas-interesse',
+  'peut-etre':'ne-sait-pas', 'peut_etre':'ne-sait-pas', 'maybe':'ne-sait-pas',
+  'oui':'participe', 'non':'pas-interesse',
+  'yes':'participe', 'no':'pas-interesse', 'unavailable':'indisponible',
   'interesse':'participe', 'ok':'participe', 'present':'participe', 'absent':'indisponible',
   'not-interested':'pas-interesse', 'not_interested':'pas-interesse'
 };
@@ -312,7 +314,7 @@ if (normalizedResponse && messages[normalizedResponse]) {
 } else if (rawResponse) {
   document.getElementById('respIcon').textContent = '⚠️';
   document.getElementById('respTitle').textContent = 'Réponse non reconnue';
-  document.getElementById('respMsg').textContent = 'La valeur "' + rawResponse + '" n\'est pas reconnue. Valeurs acceptées : oui, peut-etre, indisponible, non.';
+  document.getElementById('respMsg').textContent = 'La valeur "' + rawResponse + '" n\'est pas reconnue. Valeurs acceptées : participe, ne-sait-pas, indisponible, pas-interesse.';
 } else {
   document.getElementById('respIcon').textContent = '📋';
   document.getElementById('respTitle').textContent = 'Bienvenue';
@@ -330,16 +332,16 @@ function toggleAdmin() {
 
 function refreshAdmin() {
   var all = getResponses();
-  var counts = { 'participe':0, 'peut-etre':0, 'indisponible':0, 'pas-interesse':0 };
+  var counts = { 'participe':0, 'ne-sait-pas':0, 'indisponible':0, 'pas-interesse':0 };
   all.forEach(function(r) { if (counts[r.response] !== undefined) counts[r.response]++; });
   document.getElementById('countTotal').textContent = all.length;
   document.getElementById('countParticipe').textContent = counts['participe'];
-  document.getElementById('countPeutEtre').textContent = counts['peut-etre'];
+  document.getElementById('countNeSaitPas').textContent = counts['ne-sait-pas'];
   document.getElementById('countIndispo').textContent = counts['indisponible'];
   document.getElementById('countPasInt').textContent = counts['pas-interesse'];
 
-  var badges = { 'participe':'badge-participe', 'peut-etre':'badge-peut-etre', 'indisponible':'badge-indisponible', 'pas-interesse':'badge-pas-interesse' };
-  var labels = { 'participe':'Participe', 'peut-etre':'Peut-être', 'indisponible':'Indisponible', 'pas-interesse':'Pas intéressé(e)' };
+  var badges = { 'participe':'badge-participe', 'ne-sait-pas':'badge-ne-sait-pas', 'indisponible':'badge-indisponible', 'pas-interesse':'badge-pas-interesse' };
+  var labels = { 'participe':'Intéressé(e) et je participe', 'ne-sait-pas':'Intéressé(e) mais je ne sais pas encore', 'indisponible':'Intéressé(e) mais indisponible', 'pas-interesse':'Pas intéressé(e)' };
   var tbody = document.getElementById('responsesBody');
   tbody.innerHTML = '';
   all.forEach(function(r) {
@@ -351,13 +353,13 @@ function refreshAdmin() {
 
 function exportExcel() {
   var all = getResponses();
-  var labels = { 'participe':'Participe', 'peut-etre':'Peut-être', 'indisponible':'Indisponible', 'pas-interesse':'Pas intéressé(e)' };
+  var labels = { 'participe':'Intéressé(e) et je participe', 'ne-sait-pas':'Intéressé(e) mais je ne sais pas encore', 'indisponible':'Intéressé(e) mais indisponible', 'pas-interesse':'Pas intéressé(e)' };
   var data = all.map(function(r) {
     return { 'Email': r.email, 'Réponse': labels[r.response] || r.response, 'Date': r.date };
   });
   var ws = XLSX.utils.json_to_sheet(data);
   /* Auto-size columns */
-  ws['!cols'] = [{ wch: 30 }, { wch: 20 }, { wch: 22 }];
+  ws['!cols'] = [{ wch: 30 }, { wch: 45 }, { wch: 22 }];
   var wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, ws, 'Réponses');
   XLSX.writeFile(wb, 'reponses_bioprojet_21mai.xlsx');
